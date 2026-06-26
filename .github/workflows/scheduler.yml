@@ -1,33 +1,25 @@
 name: Get Airbnb Data Workflow
-
 on:
   schedule:
-    - cron: '0 21 * * *'  # Scheduled start time around 23:00 and 00:00 local Greece time daily (depending on season) + up to 2 hours random delay.
+    - cron: '0 21 * * 1'  # Runs once a week, Mondays around 23:00/00:00 local Greece time, + up to 2 hours random delay.
   workflow_dispatch:      # Allows manual triggering.
-
 jobs:
   run-script:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Install dependencies
         run: pip install -r requirements.txt
-
       - name: Random delay
         run: |
-          # Random delay between 0 and 2 hours (7200 seconds)
           DELAY=$((RANDOM % 7200))
           echo "Waiting $DELAY seconds before running..."
           sleep $DELAY
-
       - name: Load secrets and run script
         env:
           CONNECTION_STRING: ${{secrets.CONNECTION_STRING}}
