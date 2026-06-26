@@ -157,8 +157,7 @@ if __name__ == "__main__":
         format = "%(asctime)s - %(levelname)s - %(message)s",
         handlers = [logging.StreamHandler(sys.stdout)] #logs streamed directly to GitHub Actions console
     )
-    # connection_string = os.getenv("CONNECTION_STRING")
-    connection_string = "REMOVED"
+    connection_string = os.getenv("CONNECTION_STRING")
     if connection_string:
         engine = create_engine(connection_string)
         db_test = check_connection()
