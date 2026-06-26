@@ -7,7 +7,6 @@ import time
 import logging
 import os
 import sys
-from dotenv import find_dotenv, load_dotenv
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
