@@ -2,7 +2,11 @@
 -- ROLE CREATION
 ------------------------------------------------------------------------------------
 
--- Created roles writer and reader to be used from the Python script and Power BI respectively
+-- Create role writer that will be assigned to the Python script
+-- CREATE ROLE writer WITH LOGIN PASSWORD + password;
+
+-- Create role reader that will be assigned to Power BI
+-- CREATE ROLE reader WITH LOGIN PASSWORD + password;
 
 ------------------------------------------------------------------------------------
 -- PERMISSIONS
