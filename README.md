@@ -102,6 +102,8 @@ airbnb_data_analytics/
 │   └── roles_permissions_policies.sql
 │   └── select_queries.sql
 │   └── tables_creation.sql
+├── data_model/
+│   └── PBI_model_view.png
 ├── .gitignore
 ├── get_airbnb_data.py
 ├── requirements.txt
@@ -109,6 +111,95 @@ airbnb_data_analytics/
 
 ```
 
+## Key DAX Measures
+
+To evaluate market dynamics, compliance, and property performance, several custom DAX measures were developed to handle dynamic time intelligence, Pareto distributions, and operational flagging. Some of them include:
+
+**1. Dynamic Baseline Comparison (Demand Velocity)**
+Dynamically switches the baseline comparison period between Month-over-Month (MoM) and Year-over-Year (YoY) depending on whether the user has actively filtered by a specific month.
+
+```dax
+Demand Velocity Index = COUNTROWS(reviews)
+
+vs Baseline (Demand Velocity Index) = 
+    VAR _IsMonthSelected = ISFILTERED('DimDates'[Month Name])
+RETURN
+    IF(
+        _IsMonthSelected,
+        CALCULATE(
+            [Demand Velocity Index],
+            DATEADD('DimDates'[Date], -1, MONTH)
+        ),
+        CALCULATE(
+            [Demand Velocity Index],
+            DATEADD('DimDates'[Date], -1, YEAR)
+        )
+    )
+```
+
+**2. Pareto Cumulative Distribution (Market Share)**
+Calculates a running cumulative percentage of total demand volume across neighborhoods. This allows for an 80/20 rule (Pareto) analysis by manipulating the filter context to rank and accumulate values dynamically.
+
+```dax
+Total Demand Volume = COUNTROWS(reviews) + 0
+
+Pareto Cumulative % = 
+    VAR _CurrentVolume = [Total Demand Volume]
+    VAR _TotalVolume = CALCULATE([Total Demand Volume], ALL(listings[neighbourhood_cleansed]))
+    VAR _CumulativeVolume = 
+        CALCULATE(
+            [Total Demand Volume],
+            FILTER(
+                ALL(listings[neighbourhood_cleansed]),
+                [Total Demand Volume] >= _CurrentVolume
+            )
+        )
+        
+    VAR _Result = DIVIDE(_CumulativeVolume, _TotalVolume, 0)
+RETURN
+    _Result
+```
+
+**3. Operational Decay Rate (%)**
+Evaluates inventory health by calculating the percentage of "stagnant" listings—properties that are actively listed as available and have historical reviews, but have failed to generate a new review in the trailing 12 months.
+
+```dax
+Operational Decay Rate (%) = 
+    VAR _MaxDate = CALCULATE(MAX(reviews[date]), ALL())
+    VAR _MinDate = EDATE(_MaxDate, -12)
+    VAR _TotalActiveListings = 
+        CALCULATE(
+            COUNTROWS(listings),
+            listings[availability_365] > 0
+        )
+    VAR _StagnantListings = 
+        CALCULATE(
+            COUNTROWS(listings),
+            listings[availability_365] > 0,
+            listings[number_of_reviews] > 0,
+            listings[last_review] < _MinDate,
+            NOT(ISBLANK(listings[last_review]))
+        )
+    VAR _Result = DIVIDE(_StagnantListings, _TotalActiveListings, 0)
+RETURN
+    _Result
+```
+
+**4. Regulatory Risk (%)**
+Flags potential legal or operational risks by determining the ratio of properties operating with an invalid license (defined in a pre-calculated column via SQL query import) against the total market supply.
+
+```dax
+Regulatory Risk (%) = 
+    VAR _InvalidListings = 
+        CALCULATE(
+            COUNTROWS(listings),
+            listings[license_validity] = "Invalid"
+        )
+    VAR _TotalListings = COUNTROWS(listings)
+    VAR _Result = DIVIDE(_InvalidListings, _TotalListings, 0)
+RETURN
+    _Result
+```
 ---
 
 ## Tech stack
@@ -119,5 +210,4 @@ airbnb_data_analytics/
 * **Power BI** - Dashboard, DAX modeling, and visualization
 
 ---
-
 *Built by [Georgios Sagris*](https://www.linkedin.com/in/georgesagris/)
