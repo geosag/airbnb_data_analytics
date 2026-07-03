@@ -2,7 +2,7 @@
 
 A data pipeline and Power BI dashboard for monitoring and analyzing the short-term rental market (Airbnb) performance in Athens, Greece. Listing and review data is extracted from the web, stored in Supabase, and visualized in a 3-page interactive dashboard.
 
-📊 [**View the live dashboard**](https://app.powerbi.com/view?r=eyJrIjoiNWY4OTM4ODQtYzE4ZS00ZDQ1LWE5ZjgtMTIyNTQ0Y2M0Zjc4IiwidCI6IjIyMzk4NzFkLTBmNmItNDQ4NS04ZjIzLTM1NmE0MzJlYzNmYiJ9)
+📊 [**View the live dashboard**](https://app.powerbi.com/view?r=eyJrIjoiNTAzNTUwNWMtOWIwMS00ZWJjLTg4NTAtMWExMGNlYjI5YTQzIiwidCI6IjIyMzk4NzFkLTBmNmItNDQ4NS04ZjIzLTM1NmE0MzJlYzNmYiJ9)
 
 ---
 
