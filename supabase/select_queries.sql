@@ -15,7 +15,7 @@ WITH room_type_stats AS (
 SELECT 
     CAST(l.id AS TEXT) AS id,
     CASE 
-        WHEN TRIM(l.host_id) ~ '^[0-9]+$' THEN TRIM(l.host_id)::INT 
+        WHEN TRIM(l.host_id) ~ '^[0-9]+$' THEN CAST(TRIM(l.host_id) AS TEXT)
         ELSE NULL 
     END AS host_id,
     TRIM(l.host_url) AS host_url,
@@ -76,7 +76,10 @@ FROM listings l
 LEFT JOIN room_type_stats rts ON l.room_type = rts.room_type;
 
 -- Select from reviews
-SELECT * FROM reviews;
+SELECT 
+    CAST(listing_id AS TEXT),
+    date
+FROM reviews;
 
 -- Select from airbnb_data_latest_info
 SELECT * FROM airbnb_data_latest_info;

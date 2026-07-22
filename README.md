@@ -122,19 +122,29 @@ Dynamically switches the baseline comparison period between Month-over-Month (Mo
 Demand Velocity Index = COUNTROWS(reviews)
 
 vs Baseline (Demand Velocity Index) = 
+    VAR _CurrentYear = SELECTEDVALUE('DimDates'[Year])
     VAR _IsMonthSelected = ISFILTERED('DimDates'[Month Name])
-RETURN
-    IF(
-        _IsMonthSelected,
-        CALCULATE(
-            [Demand Velocity Index],
-            DATEADD('DimDates'[Date], -1, MONTH)
-        ),
-        CALCULATE(
-            [Demand Velocity Index],
-            DATEADD('DimDates'[Date], -1, YEAR)
+    VAR _MaxDateSelected = CALCULATE(MAX('DimDates'[Date]), ALLSELECTED('DimDates'))
+    VAR _LastActualReviewDate = CALCULATE(MAX(reviews[date]), ALLSELECTED('DimDates'))
+    VAR _EffectiveMaxDate = MIN(_MaxDateSelected, _LastActualReviewDate)
+    RETURN
+        IF(
+            _IsMonthSelected,
+            CALCULATE(
+                [Demand Velocity Index],
+                DATEADD('DimDates'[Date], -1, MONTH),
+                ALL('DimDates'[Year]),
+                ALL('DimDates'[Month Name])
+            ),
+            CALCULATE(
+                [Demand Velocity Index],
+                FILTER(
+                    ALL('DimDates'),
+                    'DimDates'[Year] = _CurrentYear - 1 &&
+                    'DimDates'[Date] <= EDATE(_EffectiveMaxDate, -12)
+                )
+            )
         )
-    )
 ```
 
 **2. Pareto Cumulative Distribution (Market Share)**
@@ -145,16 +155,20 @@ Total Demand Volume = COUNTROWS(reviews) + 0
 
 Pareto Cumulative % = 
     VAR _CurrentVolume = [Total Demand Volume]
+    VAR _CurrentNeighbourhood = MAX(listings[neighbourhood_cleansed]) 
     VAR _TotalVolume = CALCULATE([Total Demand Volume], ALL(listings[neighbourhood_cleansed]))
     VAR _CumulativeVolume = 
         CALCULATE(
             [Total Demand Volume],
             FILTER(
                 ALL(listings[neighbourhood_cleansed]),
-                [Total Demand Volume] >= _CurrentVolume
+                [Total Demand Volume] > _CurrentVolume || 
+                (
+                    [Total Demand Volume] = _CurrentVolume && 
+                    listings[neighbourhood_cleansed] >= _CurrentNeighbourhood
+                )
             )
         )
-        
     VAR _Result = DIVIDE(_CumulativeVolume, _TotalVolume, 0)
 RETURN
     _Result
